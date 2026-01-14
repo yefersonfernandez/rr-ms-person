@@ -1,12 +1,10 @@
 server:
   port: 8084
-
 spring:
   application:
     name: "ms-person"
   devtools:
     add-properties: false
-
 management:
   endpoints:
     web:
@@ -21,32 +19,31 @@ management:
       enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
-
 adapters:
   r2dbc:
-    host: ${R2DBC_HOST}
-    port: ${R2DBC_PORT}
-    database: ${R2DBC_DATABASE}
-    schema: ${R2DBC_SCHEMA}
-    username: ${R2DBC_USERNAME}
-    password: ${R2DBC_PASSWORD}
-
+    host: "${R2DBC_HOST}"
+    port: "${R2DBC_PORT}"
+    database: "${R2DBC_DATABASE}"
+    schema: "${R2DBC_SCHEMA}"
+    username: "${R2DBC_USERNAME}"
+    password: "${R2DBC_PASSWORD}"
 adapter:
   restconsumer:
     timeout: 5000
     url: "http://localhost:8083"
-
+  sqs:
+    region: "us-east-1"
+    person-enrollment-queue-url: "https://sqs.us-east-1.amazonaws.com/225422344476/personEnrollmentQueue"
 routes:
   paths:
     persons: "/person/api/v1/persons"
+    person-by-id: "/person/api/v1/persons/{personId}"
     enroll-person: "/person/api/v1/enrollments"
-
 springdoc:
   swagger-ui:
     path: "/person/api/doc/swagger-ui.html"
   api-docs:
     path: "/person/api/doc/api-docs"
-
 resilience4j:
   circuitbreaker:
     instances:

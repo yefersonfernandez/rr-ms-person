@@ -33,4 +33,15 @@ public class PersonHandler {
                         .bodyValue(buildBodySuccessResponse(ExceptionStatusCode.CREATED.status(), savedPerson))
                 );
     }
+
+    public Mono<ServerResponse> listenGetPersonById(ServerRequest request) {
+        return Mono.just(request.pathVariable("personId"))
+                .map(Long::valueOf)
+                .flatMap(personUseCase::getPersonById)
+                .map(personMapper::toPersonResponseDto)
+                .flatMap(personResponse -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(buildBodySuccessResponse(ExceptionStatusCode.OK.status(), personResponse))
+                );
+    }
 }
