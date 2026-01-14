@@ -8,16 +8,20 @@ import com.onclass.person.model.bootcampperson.BootcampPerson;
 import com.onclass.person.model.bootcampperson.gateways.BootcampPersonRepositoryPort;
 import com.onclass.person.model.person.gateways.PersonRepositoryPort;
 import com.onclass.person.port.consumer.BootcampConsumerPort;
+import com.onclass.person.port.sqs.SqsSenderPort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static com.onclass.person.constants.PersonConstants.LIMIT_BOOTCAMP_ENROLLMENTS;
+import static com.onclass.person.usecase.utils.PersonUtils.buildPersonMessage;
 
 @RequiredArgsConstructor
 public class BootcampPersonUseCase {
     private final PersonRepositoryPort personRepositoryPort;
     private final BootcampPersonRepositoryPort bootcampPersonRepositoryPort;
     private final BootcampConsumerPort bootcampConsumerPort;
+    private final SqsSenderPort sqsSenderPort;
 
     public Mono<BootcampPerson> enrollPerson(BootcampPerson bootcampPerson) {
         return personRepositoryPort.findPersonById(bootcampPerson.getPersonId())
@@ -35,6 +39,15 @@ public class BootcampPersonUseCase {
                                 .switchIfEmpty(Mono.error(new BootcampCollisionException(
                                         ExceptionMessages.BOOTCAMP_COLLISION.format(bootcampPerson.getBootcampId()))))
                 )
-                .then(bootcampPersonRepositoryPort.save(bootcampPerson));
+                .then(bootcampPersonRepositoryPort.save(bootcampPerson)
+                        .doOnSuccess(this::notifyPersonEnrollment)
+                );
+    }
+
+    private void notifyPersonEnrollment(BootcampPerson bootcampPerson) {
+        Mono.fromSupplier(() -> buildPersonMessage(bootcampPerson))
+                .flatMap(sqsSenderPort::sendPersonEnrollmentMessage)
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe();
     }
 }
