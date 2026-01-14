@@ -18,6 +18,9 @@ public class PersonRouterRest {
     public RouterFunction<ServerResponse> routerFunctionPerson(PersonHandler handler) {
         return route()
                 .POST(personPath.getPersons(), handler::listenSavePerson, PersonOpenApi::savePerson)
+                .GET(personPath.getPersonById(), handler::listenGetPersonById, PersonOpenApi::getPersonById)
                 .build();
     }
+
+
 }
