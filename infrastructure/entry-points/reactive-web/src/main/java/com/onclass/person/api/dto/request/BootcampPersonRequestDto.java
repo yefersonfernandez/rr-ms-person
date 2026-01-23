@@ -10,3 +10,4 @@ public record BootcampPersonRequestDto(
         @Schema(description = "ID of the person", example = "1")
         String personId
 ) {}
+
